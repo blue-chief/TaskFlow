@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 
-from .user import User
+from .user import UserOut
 
 class TaskStatus(str, Enum):
     todo = "todo"
@@ -17,7 +17,7 @@ class TaskOut(BaseModel):
     id: int
     title: str
     description: str | None 
-    assigned_to: User | None = None
+    assigned_to: UserOut | None = None
 
 class TaskUpdate(BaseModel):
     title: str = Field(min_length=3, max_length=200)
