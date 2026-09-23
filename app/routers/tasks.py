@@ -1,13 +1,10 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from pydantic import BaseModel, Field
+
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.task import Task as TaskModel
-from app.schemas.task import TaskCreate, TaskOut
-
-from ..schemas.task import TaskCreate, TaskOut, TaskPatch, TaskStatus, TaskUpdate
-from ..core.security import get_current_user
+from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskStatus
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
