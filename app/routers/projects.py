@@ -6,7 +6,7 @@ from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate
 from app.models.project import Project as ProjectModel
 
-router = APIRouter(prefix="/projects", tags="projects")
+router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.get("", response_model=list[ProjectOut], status_code=status.HTTP_200_OK)
 def list_project(
