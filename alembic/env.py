@@ -1,6 +1,6 @@
 from app.database import Base
 from app.core.config import settings
-from app.models import project, task 
+from app.models import project, task, user 
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
