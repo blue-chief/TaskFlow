@@ -2,6 +2,8 @@ from pwdlib import PasswordHash
 
 password_hash = PasswordHash.recommended()
 
+DUMMY_PASSWORD = "themostfakepasswordever123"
+
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
