@@ -5,7 +5,7 @@ from app.schemas.user import UserCreate, UserOut
 from app.models.user import User as UserModel
 from app.database import get_db
 from sqlalchemy.orm import Session
-from app.core.security import hash_password
+from app.core.security import hash_password, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -23,3 +23,7 @@ def register(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@router.get("/me", response_model=UserOut)
+def read_current_user(current_user: Annotated[UserModel, Depends(get_current_user)]):
+    return current_user
