@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User as UserModel
 from app.schemas.auth import LoginRequest
 from app.database import get_db
-from app.core.security import DUMMY_PASSWORD, verify_password
+from app.core.security import DUMMY_PASSWORD, verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -17,4 +17,5 @@ def login(credentials: LoginRequest, db: Annotated[Session, Depends(get_db)]):
         raise HTTPException(status_code=401, detail="Invalid Username or Password")
     if not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid Username or Password")
+    token = create_access_token(user.id)
     return{"message":"login ok - token comes tomorrow"}
