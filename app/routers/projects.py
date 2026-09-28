@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate
 from app.models.project import Project as ProjectModel
+from app.models.user import User as UserModel
+from app.core.security import get_current_user
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -18,10 +20,11 @@ def list_project(
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
 def create_project(
+    current_user: Annotated[UserModel, Depends(get_current_user)],
     project: ProjectCreate,
     db: Annotated[Session, Depends(get_db)],
 ):
-    new_project = ProjectModel(name=project.name)
+    new_project = ProjectModel(name=project.name, owner_id=current_user.id)
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
@@ -35,7 +38,10 @@ def get_project(project_id: int, db:Annotated[Session, Depends(get_db)]):
     return project
 
 @router.put("/{project_id}", response_model=ProjectOut, status_code=status.HTTP_200_OK)
-def update_project(project_id: int, project_update: ProjectUpdate, db: Annotated[Session, Depends(get_db)]):
+def update_project(
+    project_id: int, project_update: ProjectUpdate, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -51,7 +57,10 @@ def update_project(project_id: int, project_update: ProjectUpdate, db: Annotated
     return project
 
 @router.patch("/{project_id}", response_model=ProjectOut, status_code=status.HTTP_200_OK)
-def patch_project(project_id:int, project_patch: ProjectPatch, db: Annotated[Session, Depends(get_db)]):
+def patch_project(
+    project_id:int, project_patch: ProjectPatch, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -67,11 +76,15 @@ def patch_project(project_id:int, project_patch: ProjectPatch, db: Annotated[Ses
     return project
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(project_id: int, db: Annotated[Session, Depends(get_db)]):
+def delete_project(
+    project_id: int, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-
+    if project.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden, Not your project")
     db.delete(project)
     db.commit()
 
