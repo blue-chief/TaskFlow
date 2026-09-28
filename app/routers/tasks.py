@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.task import Task as TaskModel
+from app.models.user import User as UserModel
+from app.core.security import get_current_user
 from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskStatus
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -23,7 +25,10 @@ def list_task(
     return db.query(TaskModel).offset(skip).limit(limit).all()
 
 @router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
-def create_task(task: TaskCreate, db: Annotated[Session, Depends(get_db)]):
+def create_task(
+    task: TaskCreate, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     new_task = TaskModel(title=task.title, description=task.description)
     db.add(new_task)
     db.commit()
@@ -38,7 +43,10 @@ def get_task(task_id : int, db: Annotated[Session, Depends(get_db)]):
     return task
 
 @router.put("/{task_id}", response_model=TaskOut, status_code=status.HTTP_200_OK)
-def update_task(task_id: int, task_update: TaskUpdate, db: Annotated[Session, Depends(get_db)]):
+def update_task(
+    task_id: int, task_update: TaskUpdate, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -55,7 +63,10 @@ def update_task(task_id: int, task_update: TaskUpdate, db: Annotated[Session, De
     
 
 @router.patch("/{task_id}", response_model=TaskOut, status_code=status.HTTP_200_OK)
-def patch_task(task_id: int, task_patch: TaskPatch, db: Annotated[Session, Depends(get_db)]):
+def patch_task(
+    task_id: int, task_patch: TaskPatch, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -71,7 +82,10 @@ def patch_task(task_id: int, task_patch: TaskPatch, db: Annotated[Session, Depen
     return task
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: int, db: Annotated[Session, Depends(get_db)]):
+def delete_task(
+    task_id: int, 
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]):
     task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")

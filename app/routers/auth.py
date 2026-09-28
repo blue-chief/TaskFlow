@@ -11,7 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login")
-def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[Session, Depends(get_db)]):
+def login(credentials: Annotated[OAuth2PasswordRequestForm, Depends(LoginRequest)], db: Annotated[Session, Depends(get_db)]):
     user = db.query(UserModel).filter(UserModel.username == credentials.username).first()
     if not user:
         verify_password(DUMMY_PASSWORD)

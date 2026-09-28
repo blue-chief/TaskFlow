@@ -30,7 +30,7 @@ def get_current_user(
         db: Annotated [Session, Depends(get_db)],
 ) -> UserModel:
     try:
-        payload = jwt.decode(token, settings.secret_key, algotithms=["HS256"])
+        payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
         user_id = int(payload["sub"])
     except jwt.PyJWKError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
