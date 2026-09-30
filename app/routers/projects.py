@@ -27,12 +27,14 @@ def create_project(
 ):
     new_project = ProjectModel(name=project.name, owner_id=current_user.id)
     db.add(new_project)
-    db.commit()
-    db.refresh(new_project)
+    db.flush()
+    
     new_owner = ProjectMemberModel(project_id=new_project.id, user_id=current_user.id, role="owner")
+
     db.add(new_owner)
     db.commit()
-    db.refresh(new_owner)
+
+    db.refresh(new_project)
     return new_project
 
 @router.get("/{project_id}", response_model=ProjectOut, status_code=status.HTTP_200_OK)
