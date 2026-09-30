@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate
 from app.models.project import Project as ProjectModel
+from app.models.project_member import ProjectMember as ProjectMemberModel
 from app.models.user import User as UserModel
 from app.core.security import get_current_user
 
@@ -28,6 +29,10 @@ def create_project(
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
+    new_owner = ProjectMemberModel(project_id=new_project.id, user_id=current_user.id, role="owner")
+    db.add(new_owner)
+    db.commit()
+    db.refresh(new_owner)
     return new_project
 
 @router.get("/{project_id}", response_model=ProjectOut, status_code=status.HTTP_200_OK)
