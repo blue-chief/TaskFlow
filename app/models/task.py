@@ -9,4 +9,7 @@ class Task(Base):
     title = Column(String(200), nullable=False)
     description = Column(String(2000), nullable=True)
     project_id = Column(Integer, ForeignKey("projects.id"))
+    assigned_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    d_user = relationship("User", back_populates="d_tasks")
     project = relationship("Project", back_populates="tasks")

@@ -11,5 +11,6 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
 
-    owner_projects = relationship("Project", back_populates="owner")
+    d_tasks = relationship("Task", back_populates="d_user")
+    owned_projects = relationship("Project", back_populates="owner")
     memberships = relationship("ProjectMember", back_populates="user")

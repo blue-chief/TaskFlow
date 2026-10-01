@@ -1,12 +1,14 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Path
 
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate, ProjectOutFull
 from app.models.project import Project as ProjectModel
 from app.models.project_member import ProjectMember as ProjectMemberModel
 from app.models.user import User as UserModel
+from app.models.task import Task as TaskModel
+from app.schemas.task import TaskOut, TaskCreate
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -37,8 +39,11 @@ def create_project(
     db.refresh(new_project)
     return new_project
 
-@router.get("/{project_id}", response_model=ProjectOut, status_code=status.HTTP_200_OK)
-def get_project(project_id: int, db:Annotated[Session, Depends(get_db)]):
+@router.get("/{project_id}", response_model=ProjectOutFull, status_code=status.HTTP_200_OK)
+def get_project(
+    project_id: int, 
+    db:Annotated[Session, Depends(get_db)],
+):
     project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -53,6 +58,10 @@ def update_project(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    is_owner = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).first()
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Not your project")
+    
     update_data = project_update.model_dump()
 
     for key, value in update_data.items():
@@ -72,6 +81,10 @@ def patch_project(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    is_owner = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).first()
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Not your project")
+    
     update_data = project_patch.model_dump(exclude_unset=True)
 
     for key, value in update_data.items():
@@ -96,3 +109,50 @@ def delete_project(
     db.commit()
 
     return None
+
+@router.post("/{project_id}/tasks", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
+def create_project_task(
+    project_id: Annotated[int, Path()],
+    task: TaskCreate,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+):
+    project_exists = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    if not project_exists:
+        raise HTTPException(status_code=404, detail="Project does not exists")
+
+    is_owner = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).first()
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Not your project")
+
+    new_task = TaskModel(title=task.title, description=task.description, project_id=project_id)
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+
+    return new_task
+
+@router.patch("/{project_id}/tasks/{task_id}", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
+def patch_project_task(
+    project_id: Annotated[int, Path()],
+    task_id: Annotated[int, Path()],
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+):
+    project_exists = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    if not project_exists:
+        raise HTTPException(status_code=404, detail="Project does not exists")
+
+    is_owner = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).first()
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Not your project")
+
+    task_exists = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not task_exists:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task_exists.project_id = project_id
+    db.commit()
+    db.refresh(task_exists)
+
+    return task_exists
