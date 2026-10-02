@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Query, Depends, status
+from fastapi import APIRouter, HTTPException, Query, Path, Depends, status
 
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -7,7 +7,7 @@ from app.models.task import Task as TaskModel
 from app.models.user import User as UserModel
 from app.models.project_member import ProjectMember as ProjectMemberModel
 from app.core.security import get_current_user
-from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskStatus
+from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -30,7 +30,14 @@ def create_task(
     task: TaskCreate, 
     current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]):
-    new_task = TaskModel(title=task.title, description=task.description)
+    
+    new_task = TaskModel(
+    title=task.title, 
+    description=task.description, 
+    status=task.status, 
+    priority=task.priority, 
+    assigned_to_id=current_user.id)
+
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
@@ -124,6 +131,61 @@ def assign_task(
         raise HTTPException(status_code=403, detail="Forbidden, Must be Owner to assign Task")
     
     task.assigned_to_id = assignee_id
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+@router.patch("/{task_id}/status", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
+def patch_task_status(
+    task_id: Annotated[int, Path()],
+    status: TaskPatch,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    is_owner = db.query(TaskModel).filter(TaskModel.assigned_to_id == current_user.id).first()
+    if not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Must be owner to change status")
+
+    update_data = status.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+@router.patch("/{task_id}/priority", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
+def patch_task_priority(
+    task_id: Annotated[int, Path()],
+    priority: TaskPatch,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    is_creator = db.query(TaskModel).filter(TaskModel.assigned_to_id == current_user.id).first()
+    is_owner = db.query(ProjectMemberModel).filter(
+        ProjectMemberModel.user_id == current_user.id,
+        ProjectMemberModel.role == "owner",
+        ).first()
+    
+    if not is_creator or not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Must be owner to change status")
+
+    update_data = priority.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
 
     db.commit()
     db.refresh(task)
