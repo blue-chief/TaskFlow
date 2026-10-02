@@ -125,7 +125,7 @@ def create_project_task(
     if not is_owner:
         raise HTTPException(status_code=403, detail="Forbidden, Not your project")
 
-    new_task = TaskModel(title=task.title, description=task.description, project_id=project_id)
+    new_task = TaskModel(title=task.title, description=task.description, project_id=project_id, status=task.status, priority=task.priority)
     db.add(new_task)
     db.commit()
     db.refresh(new_task)

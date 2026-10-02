@@ -10,6 +10,12 @@ class TaskStatusEnum(str, enum.Enum):
     completed = "completed"
     cancelled = "cancelled"
 
+class TaskPriorityEnum(str, enum.Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+    urgent = "urgent"
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -19,6 +25,7 @@ class Task(Base):
     project_id = Column(Integer, ForeignKey("projects.id"))
     assigned_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     status = Column(SAEnum(TaskStatusEnum), default=TaskStatusEnum.todo, nullable=False)
+    priority = Column (SAEnum(TaskPriorityEnum), default=TaskPriorityEnum.low, nullable=False)
 
     d_user = relationship("User", back_populates="d_tasks")
     project = relationship("Project", back_populates="tasks")
