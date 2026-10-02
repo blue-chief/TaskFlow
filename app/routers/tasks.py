@@ -7,7 +7,7 @@ from app.models.task import Task as TaskModel
 from app.models.user import User as UserModel
 from app.models.project_member import ProjectMember as ProjectMemberModel
 from app.core.security import get_current_user
-from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull
+from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull, TaskPatchPriority, TaskPatchStatus
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -140,7 +140,7 @@ def assign_task(
 @router.patch("/{task_id}/status", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
 def patch_task_status(
     task_id: Annotated[int, Path()],
-    status: TaskPatch,
+    status: TaskPatchStatus,
     current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]
 ):
@@ -165,7 +165,7 @@ def patch_task_status(
 @router.patch("/{task_id}/priority", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
 def patch_task_priority(
     task_id: Annotated[int, Path()],
-    priority: TaskPatch,
+    priority: TaskPatchPriority,
     current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)]
 ):
