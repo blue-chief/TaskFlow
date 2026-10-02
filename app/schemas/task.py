@@ -1,13 +1,4 @@
-from enum import Enum
 from pydantic import BaseModel, Field
-
-from .user import UserOut
-
-class TaskStatus(str, Enum):
-    todo = "todo"
-    in_progress = "in_progress"
-    completed = "completed"
-    cancelled = "cancelled"
 
 class TaskCreate(BaseModel):
     title: str = Field(min_length=3, max_length=200)
