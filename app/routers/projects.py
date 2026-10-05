@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Path
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectPatch, ProjectUpdate, ProjectOutFull
 from app.models.project import Project as ProjectModel
@@ -15,11 +16,16 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 @router.get("", response_model=list[ProjectOut], status_code=status.HTTP_200_OK)
 def list_project(
+    current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
     skip: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 10,
 ):
-    return db.query(ProjectModel).offset(skip).limit(limit).all()
+    projects = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id)
+    if not projects:
+        raise HTTPException(status_code=404, detail="No Project Found")
+    
+    projects = projects.offset(skip).limit(limit).all()
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
 def create_project(
@@ -41,10 +47,16 @@ def create_project(
 
 @router.get("/{project_id}", response_model=ProjectOutFull, status_code=status.HTTP_200_OK)
 def get_project(
+    current_user: Annotated[UserModel, Depends(get_current_user)],
     project_id: int, 
     db:Annotated[Session, Depends(get_db)],
 ):
-    project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    projects = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id)
+    if not projects:
+        raise HTTPException(status_code=404, detail="No Project Found")
+    
+    project = projects.filter(ProjectModel.id == project_id).first()
+
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
@@ -53,8 +65,13 @@ def get_project(
 def update_project(
     project_id: int, project_update: ProjectUpdate, 
     current_user: Annotated[UserModel, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)]):
-    project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    db: Annotated[Session, Depends(get_db)],
+):
+    projects = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id)
+    if not projects:
+        raise HTTPException(status_code=404, detail="No Project Found")
+        
+    project = projects.filter(ProjectModel.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -147,7 +164,14 @@ def patch_project_task(
     if not is_owner:
         raise HTTPException(status_code=403, detail="Forbidden, Not your project")
 
-    task_exists = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    task = db.query(TaskModel).join(TaskModel.project, isouter=True).filter(
+                or_(
+                    TaskModel.assigned_to_id == current_user.id,
+                    ProjectModel.owner_id == current_user.id
+                )
+            )
+    task_exists = task.filter(TaskModel.id == task_id).first()
+
     if not task_exists:
         raise HTTPException(status_code=404, detail="Task not found")
 
