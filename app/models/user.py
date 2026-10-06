@@ -1,6 +1,6 @@
 from app.database import Base
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean 
 from sqlalchemy.orm import relationship
 
 class User(Base):
@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    is_admin = Column(Boolean, default=False)
 
     d_tasks = relationship("Task", back_populates="d_user")
     owned_projects = relationship("Project", back_populates="owner")

@@ -27,6 +27,8 @@ def list_project(
     
     projects = projects.offset(skip).limit(limit).all()
 
+    return projects
+
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
 def create_project(
     current_user: Annotated[UserModel, Depends(get_current_user)],
@@ -56,7 +58,7 @@ def get_project(
         raise HTTPException(status_code=404, detail="No Project Found")
     
     project = projects.filter(ProjectModel.id == project_id).first()
-
+    
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
@@ -67,15 +69,11 @@ def update_project(
     current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    projects = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id)
-    if not projects:
-        raise HTTPException(status_code=404, detail="No Project Found")
-        
-    project = projects.filter(ProjectModel.id == project_id).first()
+    project = db.query(ProjectModel).filter(ProjectModel.id == project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    is_owner = db.query(ProjectModel).filter(ProjectModel.owner_id == current_user.id).first()
+    is_owner = project.filter(ProjectModel.owner_id == current_user.id).first()
     if not is_owner:
         raise HTTPException(status_code=403, detail="Forbidden, Not your project")
     
