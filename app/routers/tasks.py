@@ -8,8 +8,9 @@ from app.models.task import Task as TaskModel, TaskPriorityEnum,TaskStatusEnum
 from app.models.user import User as UserModel
 from app.models.project import Project as ProjectModel
 from app.models.project_member import ProjectMember as ProjectMemberModel
+from app.models.comment import Comment as CommentModel
 from app.core.security import get_current_user
-from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull, TaskPatchPriority, TaskPatchStatus
+from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull, TaskPatchPriority, TaskPatchStatus, TaskPostComment, TaskCommentOut
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -54,7 +55,8 @@ def list_task(
 def create_task(
     task: TaskCreate, 
     current_user: Annotated[UserModel, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)]):
+    db: Annotated[Session, Depends(get_db)]
+):
     
     new_task = TaskModel(
     title=task.title, 
@@ -68,7 +70,7 @@ def create_task(
     db.refresh(new_task)
     return new_task
 
-@router.get("/{task_id}", response_model=TaskOut, status_code=status.HTTP_200_OK)
+@router.get("/{task_id}", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
 def get_task(
     task_id : int, 
     db: Annotated[Session, Depends(get_db)],
@@ -251,3 +253,35 @@ def patch_task_priority(
     db.refresh(task)
 
     return task
+
+@router.post("/{task_id}/comments", response_model=TaskCommentOut, status_code=status.HTTP_201_CREATED)
+def add_comment(
+    task_id: Annotated[int, Path()],
+    comment: TaskPostComment,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    member = db.query(TaskModel).join(TaskModel.project, isouter=True).join(ProjectModel.members, isouter=True).filter(
+        or_(
+            TaskModel.assigned_to_id == current_user.id,
+            ProjectMemberModel.user_id == current_user.id
+            )).all()
+
+    if not member:
+        raise HTTPException(status_code=403, detail="Forbidden, Must be associated to task to make comment")
+
+    new_comment = CommentModel(
+        task_id=task_id,
+        author_id=current_user.id,
+        body=comment.body)
+
+    db.add(new_comment)
+    db.commit()
+    db.refresh(new_comment)
+
+    return new_comment

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -22,6 +22,7 @@ class TaskOutFull(BaseModel):
     assigned_to_id: int | None 
     status: Literal["todo", "in_progress", "completed", "cancelled"]
     priority: Literal["low", "medium", "high", "urgent"]
+    comments: List[TaskCommentOut] | None
 
 class TaskUpdate(BaseModel):
     title: str = Field(min_length=3, max_length=200)
@@ -42,3 +43,11 @@ class TaskPatchStatus(BaseModel):
 
 class TaskPatchPriority(BaseModel):
     priority: Literal["low", "medium", "high", "urgent"] = Field(default="low")
+
+class TaskPostComment(BaseModel):
+    body : str
+
+class TaskCommentOut(BaseModel):
+    task_id: int
+    author_id : int
+    body: str
