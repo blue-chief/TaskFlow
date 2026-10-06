@@ -9,6 +9,7 @@ from app.models.user import User as UserModel
 from app.models.project import Project as ProjectModel
 from app.models.project_member import ProjectMember as ProjectMemberModel
 from app.models.comment import Comment as CommentModel
+from app.services.activity import log_activity
 from app.core.security import get_current_user
 from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull, TaskPatchPriority, TaskPatchStatus, TaskPostComment, TaskCommentOut
 
@@ -70,7 +71,7 @@ def create_task(
     db.refresh(new_task)
     return new_task
 
-@router.get("/{task_id}", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
+@router.get("/{task_id}", response_model=TaskOut, status_code=status.HTTP_200_OK)
 def get_task(
     task_id : int, 
     db: Annotated[Session, Depends(get_db)],
@@ -193,6 +194,12 @@ def assign_task(
         raise HTTPException(status_code=403, detail="Forbidden, Must be Owner to assign Task")
     
     task.assigned_to_id = assignee_id
+    log_activity(
+        db,
+        task_id,
+        current_user.id,
+        f"Assign task to user {assignee_id}"
+    )
 
     db.commit()
     db.refresh(task)
@@ -218,6 +225,13 @@ def patch_task_status(
     update_data = status.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(task, key, value)
+
+    log_activity(
+        db,
+        task_id,
+        current_user.id,
+        f"changed status to {task.status}"
+    )
 
     db.commit()
     db.refresh(task)
@@ -248,6 +262,13 @@ def patch_task_priority(
     update_data = priority.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(task, key, value)
+
+    log_activity(
+        db,
+        task_id,
+        current_user.id,
+        f"changed priority to {task.priority}"
+    )
 
     db.commit()
     db.refresh(task)
@@ -280,8 +301,37 @@ def add_comment(
         author_id=current_user.id,
         body=comment.body)
 
+    log_activity(
+        db,
+        task_id,
+        current_user.id,
+        f"Added comment {comment.body[:10]}"
+    )
+
     db.add(new_comment)
     db.commit()
     db.refresh(new_comment)
 
     return new_comment
+
+@router.get("/{task_id}/comments", response_model=TaskOutFull, status_code=status.HTTP_200_OK)
+def get_task_comment(
+    task_id : int, 
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[UserModel, Depends(get_current_user)]
+):
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    member = db.query(TaskModel).join(TaskModel.project, isouter=True).join(ProjectModel.members, isouter=True).filter(
+        or_(
+            TaskModel.assigned_to_id == current_user.id,
+            ProjectMemberModel.user_id == current_user.id
+            )).all()
+
+    if not member:
+        raise HTTPException(status_code=403, detail="Forbidden, Must be associated to task to view comment")
+
+    return task
