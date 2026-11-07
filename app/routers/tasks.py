@@ -12,6 +12,7 @@ from app.models.comment import Comment as CommentModel
 from app.services.activity import log_activity
 from app.core.security import get_current_user
 from app.schemas.task import TaskCreate, TaskOut, TaskPatch, TaskUpdate, TaskOutFull, TaskPatchPriority, TaskPatchStatus, TaskPostComment, TaskCommentOut
+from app.core.permissions import require_project_role
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -170,6 +171,7 @@ def delete_task(
 def assign_task(
     task_id: int, 
     assignee_id: int, 
+    project_id: int,
     current_user: Annotated[UserModel, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):
@@ -177,21 +179,7 @@ def assign_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    is_member = db.query(ProjectMemberModel).filter(
-        ProjectMemberModel.project_id == task.project_id,
-        ProjectMemberModel.user_id == assignee_id,
-    ).first()
-
-    if not is_member:
-        raise HTTPException(status_code=400, detail="User is not a project member")
-    
-    is_owner = db.query(ProjectMemberModel).filter(
-        ProjectMemberModel.user_id == current_user.id, 
-        ProjectMemberModel.role == "owner"
-    ).first()
-
-    if not is_owner:
-        raise HTTPException(status_code=403, detail="Forbidden, Must be Owner to assign Task")
+    require_project_role(db, project_id, current_user, allowed_roles={"owner"})
     
     task.assigned_to_id = assignee_id
     log_activity(
@@ -250,14 +238,14 @@ def patch_task_priority(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    is_creator = db.query(TaskModel).filter(TaskModel.assigned_to_id == current_user.id).first()
+    is_assigned = db.query(TaskModel).filter(TaskModel.assigned_to_id == current_user.id).first()
     is_owner = db.query(ProjectMemberModel).filter(
         ProjectMemberModel.user_id == current_user.id,
         ProjectMemberModel.role == "owner",
         ).first()
     
-    if not is_creator or not is_owner:
-        raise HTTPException(status_code=403, detail="Forbidden, Must be owner to change status")
+    if not is_assigned or not is_owner:
+        raise HTTPException(status_code=403, detail="Forbidden, Must be owner or assignee to change status")
 
     update_data = priority.model_dump(exclude_unset=True)
     for key, value in update_data.items():
