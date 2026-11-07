@@ -11,6 +11,8 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_admin = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=False, server_default="false", nullable=False)
+    token_version = Column(Integer, default=0, server_default="0", nullable=False)
 
     d_tasks = relationship("Task", back_populates="d_user")
     owned_projects = relationship("Project", back_populates="owner")
