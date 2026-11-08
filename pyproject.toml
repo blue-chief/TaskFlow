@@ -11,10 +11,12 @@ dependencies = [
     "alembic>=1.20.0",
     "fastapi[standard]>=0.141.1",
     "httpx>=0.28.1",
+    "httpx2>=2.16.0",
     "passlib[bcrypt]>=1.7.4",
     "psycopg>=3.3.5",
     "pwdlib[argon2]>=0.3.1",
     "pyjwt>=2.15.0",
+    "pytest>=9.2.0",
     "python-multipart>=0.0.32",
     "slowapi>=0.1.10",
     "sqlalchemy>=2.0.54",
@@ -27,3 +29,9 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "app"
 module-root = ""
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:_pytest.python.CallSpec2 has been renamed to CallSpec:pytest.PytestRemovedIn10Warning",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
+]
