@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
@@ -6,8 +6,8 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8)
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     email: str
-    class Config:
-        from_attributes = True
