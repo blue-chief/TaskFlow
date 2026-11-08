@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5500"
     verify_email_path: str = "/verify-email.html"
     reset_password_path: str = "/reset-password.html"
-    email_backend: str = "console" # "console" / "memory" / "resend" / "brevo"
+    email_backend: str = "memory" # "console" / "memory" / "resend" / "brevo"
     email_from: str = "TaskFlow <onboarding@resend.dev>"
     resend_api_key: str = ""
     brevo_api_key: str = ""

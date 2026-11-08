@@ -16,7 +16,7 @@ from app.services.email_tokens import RESET_TTL
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/login", response_model=None)
+@router.post("/login")
 def login(credentials: LoginRequest, db: Annotated[Session, Depends(get_db)]):
     user = db.query(UserModel).filter(UserModel.username == credentials.username).first()
     password_ok = verify_password(credentials.password, user.hashed_password if user else DUMMY_HASH)

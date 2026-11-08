@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — TaskFlow </title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar"><a href="index.html" class="brand">Mini Blog</a></nav>
+    <main class="container narrow">
+        <h1>Create an account</h1>
+        <form id="registerForm" class="auth-form">
+            <input type="text" id="username" placeholder="Username" required minlength="3">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required minlength="8">
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+        <p id="errorBanner" class="error-banner hidden"></p>
+        <p class="auth-switch">Already have an account? <a href="login.html">Log in</a></p>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
