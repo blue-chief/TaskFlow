@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
+from app.services.email import outbox
 
 TEST_DB_URL = "postgresql+psycopg://postgres:BC%40edouni@localhost:5432/taskflow_test"
 engine = create_engine(TEST_DB_URL)
@@ -29,3 +30,7 @@ def client(db_session):
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+@pytest.fixture(autouse=True)
+def clear_email_outbox():
+    outbox.clear()

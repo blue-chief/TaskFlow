@@ -17,8 +17,7 @@ def require_project_role(
 
     membership = db.query(ProjecctMemberModel).filter(
         ProjecctMemberModel.project_id == project_id,
-        #ProjecctMemberModel.user_id == user.id,
-        ProjecctMemberModel.role == "owner"
+        ProjecctMemberModel.user_id == user.id,
     ).first()
 
     if not membership or membership.role not in allowed_roles:

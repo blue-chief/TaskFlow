@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from app.models.user import User as UserModel
 from app.database import get_db
+from jwt.exceptions import InvalidTokenError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 password_hash = PasswordHash.recommended()
@@ -30,10 +31,21 @@ def get_current_user(
         db: Annotated [Session, Depends(get_db)],
 ) -> UserModel:
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=["HS256"]
+        )
+
         user_id = int(payload["sub"])
-    except jwt.PyJWKError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    except (InvalidTokenError, ValueError, KeyError, TypeError):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
     user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
