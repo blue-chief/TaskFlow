@@ -1,23 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — TaskFlow </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — TaskFlow</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <nav class="navbar"><a href="index.html" class="brand">Mini Blog</a></nav>
+    <nav class="navbar">
+        <a href="login.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+    </nav>
+
     <main class="container narrow">
-        <h1>Create an account</h1>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Create an account</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.95rem;">Join TaskFlow to manage projects and collaborate</p>
+        </div>
+
         <form id="registerForm" class="auth-form">
-            <input type="text" id="username" placeholder="Username" required minlength="3">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required minlength="8">
-            <button type="submit" class="btn btn-primary">Register</button>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Choose a username (min 3 chars)" required minlength="3" autofocus autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" placeholder="name@company.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Create a secure password (min 8 chars)" required minlength="8" autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem; font-size: 0.95rem;">
+                Create Account &rarr;
+            </button>
         </form>
+
         <p id="errorBanner" class="error-banner hidden"></p>
-        <p class="auth-switch">Already have an account? <a href="login.html">Log in</a></p>
+
+        <p class="auth-switch">
+            Already have an account? <a href="login.html">Log in instead</a>
+        </p>
     </main>
+
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
 </body>

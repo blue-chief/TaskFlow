@@ -1,32 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resend Verification Email</title>
+    <title>Resend Verification — TaskFlow</title>
     <link rel="stylesheet" href="css/styles.css">
-    <script src="js/auth.js" defer></script>
 </head>
 <body>
-    <main>
-        <h1>Resend Verification Email</h1>
+    <nav class="navbar">
+        <a href="login.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+    </nav>
 
-        <form id="resendForm">
-            <label for="resendEmail">Email Address</label>
+    <main class="container narrow">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Resend link</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.95rem;">Request a new email verification link</p>
+        </div>
 
-            <input
-                id="resendEmail"
-                type="email"
-                name="email"
-                required
-                autocomplete="email"
-            >
+        <form id="resendForm" class="auth-form">
+            <div class="form-group">
+                <label for="resendEmail">Account Email Address</label>
+                <input id="resendEmail" type="email" placeholder="you@company.com" required autofocus autocomplete="email">
+            </div>
 
-            <button type="submit">Resend</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem; font-size: 0.95rem;">
+                Send New Link &rarr;
+            </button>
         </form>
 
-        <p id="resendResult"></p>
+        <p id="resendResult" style="margin-top: 1rem; color: var(--text-secondary); text-align: center; font-weight: 500;"></p>
+
+        <p class="auth-switch">
+            Already verified your account? <a href="login.html">Sign in here</a>
+        </p>
     </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>

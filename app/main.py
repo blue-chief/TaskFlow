@@ -1,7 +1,9 @@
 import logging
+import os
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 
@@ -28,16 +30,23 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 app.add_middleware(RequestLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins, #explicit list, never "*" once real users log in
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_origins=settings.cors_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 app.include_router(tasks.router)
 app.include_router(users.router)
 app.include_router(projects.router)
 app.include_router(auth.router)
 app.include_router(project_members.router)
+
+if os.path.exists("frontend"):
+    app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+
 
 @app.get("/")
 def home():

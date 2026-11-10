@@ -13,6 +13,11 @@ class ProjectMember(Base):
     project = relationship("Project", back_populates="members")
     user = relationship("User", back_populates="memberships")
 
+    @property
+    def username(self):
+        return self.user.username if self.user else None
+
+
     __table_args__ = (
         UniqueConstraint(
             "project_id",

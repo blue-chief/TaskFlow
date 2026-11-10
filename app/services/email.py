@@ -33,7 +33,7 @@ def _client() -> httpx.AsyncClient:
 
 async def _post_with_retry(url: str, *, headers: dict, payload: dict) -> None:
     last_error: Exception | None = None
-    async with _client as client:
+    async with _client() as client:
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
                 response = await client.post(url, headers=headers, json=payload)
@@ -63,12 +63,21 @@ async def _send_resend(message: EmailMessage) -> None:
 
 async def _send_brevo(message: EmailMessage) -> None:
     sender_name, sender_email = parseaddr(settings.email_from)
+    if not sender_email:
+        sender_email = settings.email_from
+    sender = {"name": sender_name or "TaskFlow", "email": sender_email}
     await _post_with_retry(
         BREVO_URL,
-        headers={"api-key": settings.brevo_api_key, "accept":"application/json"},
-        payload={"sender": {"name": sender_name, "email": sender_email},
-                 "to":[{"email": message.to}], "subject": message.subject, "htmlContent": message.html},
+        headers={"api-key": settings.brevo_api_key, "accept": "application/json"},
+        payload={
+            "sender": sender,
+            "to": [{"email": message.to}],
+            "subject": message.subject,
+            "htmlContent": message.html,
+            "textContent": message.text,
+        },
     )
+
 
 async def send_email(message: EmailMessage) -> None:
     """Send one email. Never raises: this runs inside a FastAPI BackgroundTask,
@@ -86,3 +95,5 @@ async def send_email(message: EmailMessage) -> None:
             await _send_brevo(message)
     except Exception:
         logger.exception("Could not send email (subject=%r) to %s", message.subject, message.to)
+        if settings.environment == "development":
+            logger.warning("FALLBACK (DEV): Verification / Reset link for %s:\n%s", message.to, message.text)

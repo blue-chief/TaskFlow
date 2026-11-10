@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Board — TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="projects.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+        <div class="nav-links" id="navLinks"></div>
+    </nav>
+
+    <main class="container wide">
+        <div class="page-header">
+            <div class="page-header-content">
+                <p style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--accent); letter-spacing:0.05em; margin:0 0 0.25rem;">
+                    Project Kanban Board
+                </p>
+                <h1 id="projectName">Loading...</h1>
+            </div>
+            <button id="addTaskBtn" class="btn btn-primary">
+                <span>+</span> New task
+            </button>
+        </div>
+
+        <form id="newTaskForm" class="inline-form hidden">
+            <input type="text" id="taskTitle" placeholder="What needs to be done?" required maxlength="200">
+            <button type="submit" class="btn btn-primary">Add Task</button>
+        </form>
+
+        <form id="taskFilters" class="filter-bar">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Filter tasks by keyword...">
+                <span class="kbd-shortcut">/</span>
+            </div>
+            <select id="statusFilter" title="Filter by status">
+                <option value="">All statuses</option>
+                <option value="todo">To do</option>
+                <option value="in_progress">In progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <select id="priorityFilter" title="Filter by priority">
+                <option value="">All priorities</option>
+                <option value="low">Low priority</option>
+                <option value="medium">Medium priority</option>
+                <option value="high">High priority</option>
+                <option value="urgent">Urgent priority</option>
+            </select>
+        </form>
+
+        <p id="errorBanner" class="error-banner hidden"></p>
+
+        <div class="board" id="board">
+            <!-- To Do -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-header-title">
+                        <span class="status-indicator-dot todo"></span> To do
+                    </span>
+                    <span class="column-counter" id="count-todo">0</span>
+                </div>
+                <div class="column-tasks" id="col-todo" data-status="todo"></div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-header-title">
+                        <span class="status-indicator-dot in_progress"></span> In progress
+                    </span>
+                    <span class="column-counter" id="count-in_progress">0</span>
+                </div>
+                <div class="column-tasks" id="col-in_progress" data-status="in_progress"></div>
+            </div>
+
+            <!-- Completed -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-header-title">
+                        <span class="status-indicator-dot completed"></span> Completed
+                    </span>
+                    <span class="column-counter" id="count-completed">0</span>
+                </div>
+                <div class="column-tasks" id="col-completed" data-status="completed"></div>
+            </div>
+
+            <!-- Cancelled -->
+            <div class="board-column">
+                <div class="column-header">
+                    <span class="column-header-title">
+                        <span class="status-indicator-dot cancelled"></span> Cancelled
+                    </span>
+                    <span class="column-counter" id="count-cancelled">0</span>
+                </div>
+                <div class="column-tasks" id="col-cancelled" data-status="cancelled"></div>
+            </div>
+        </div>
+
+        <section class="members-section">
+            <h2>Project Team & Collaborators</h2>
+            <p style="color:var(--text-muted); font-size:0.875rem; margin-top:0; margin-bottom:1rem;">
+                Everyone listed here can view this project, create tasks, and be assigned work.
+            </p>
+            <div id="membersList" class="members-list"></div>
+            <form id="addMemberForm" class="inline-form" style="max-width:480px; margin-bottom:0;">
+                <input type="text" id="memberUsername" placeholder="Enter username to invite" required>
+                <button type="submit" class="btn btn-secondary">Invite Member</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/members.js"></script>
+</body>
+</html>

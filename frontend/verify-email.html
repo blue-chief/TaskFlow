@@ -1,20 +1,40 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email</title>
+    <title>Verify Email — TaskFlow</title>
     <link rel="stylesheet" href="css/styles.css">
-    <script src="js/auth.js" defer></script>
 </head>
 <body>
-    <main>
-        <h1>Email Verification</h1>
+    <nav class="navbar">
+        <a href="login.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+    </nav>
 
-        <p id="verifyResult">Verifying...</p>
+    <main class="container narrow">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem 2rem; box-shadow: var(--shadow-md); text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔐</div>
+            <h1 style="font-size: 1.65rem; margin-bottom: 0.5rem;">Email Verification</h1>
 
-        <span id="verifyEmailAuto" hidden></span>
+            <div id="verifyResult" style="margin-top: 1rem; color: var(--text-muted); font-size: 0.95rem;">
+                Contacting server to verify your activation link...
+            </div>
+
+            <div id="manualTokenSection" class="hidden" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; text-align: left;">
+                <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    Or paste your verification token manually:
+                </p>
+                <form id="manualVerifyForm" class="auth-form" style="padding: 1.25rem;">
+                    <input type="text" id="manualTokenInput" placeholder="Paste verification token here" required>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Verify Token</button>
+                </form>
+            </div>
+        </div>
     </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>

@@ -11,3 +11,8 @@ class Comment(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     task = relationship("Task", back_populates="comments")
+    author = relationship("User")
+
+    @property
+    def content(self):
+        return self.body

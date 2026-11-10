@@ -17,7 +17,7 @@ def add_member(
     db: Annotated[Session, Depends(get_db)],
 ):
     project = db.query(ProjectModel).filter(
-    ProjectModel.id == project_id
+        ProjectModel.id == project_id
     ).first()
 
     if not project:
@@ -32,23 +32,30 @@ def add_member(
             detail="Only the project owner can add members"
         )
 
-    is_member = db.query(ProjectMemberModel).filter(
-        ProjectMemberModel.project_id == project_id,
-        ProjectMemberModel.user_id == member.user_id,
-    ).first()
+    if member.username:
+        user = db.query(UserModel).filter(UserModel.username == member.username).first()
+    elif member.user_id:
+        user = db.query(UserModel).filter(UserModel.id == member.user_id).first()
+    else:
+        raise HTTPException(status_code=400, detail="Must provide username or user_id")
 
-    user = db.query(UserModel).filter(UserModel.id == member.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    if not is_member:
-        new_member = ProjectMemberModel(project_id=project_id, user_id=member.user_id)
-        db.add(new_member)
-        db.commit()
-        db.refresh(new_member)
-        return new_member
-    else:
+
+    is_member = db.query(ProjectMemberModel).filter(
+        ProjectMemberModel.project_id == project_id,
+        ProjectMemberModel.user_id == user.id,
+    ).first()
+
+    if is_member:
         raise HTTPException(status_code=409, detail="User is already a Project Member")
+
+    new_member = ProjectMemberModel(project_id=project_id, user_id=user.id, role="member")
+    db.add(new_member)
+    db.commit()
+    db.refresh(new_member)
+    return new_member
+
 
 
 @router.get("/{project_id}/members", response_model=list[ProjectMemberOut], status_code=status.HTTP_200_OK)
@@ -63,10 +70,10 @@ def get_members(
     if not project_exists:
         raise HTTPException(status_code=404, detail="Project does not exists")
     
-    is_member = db.query(ProjectMemberModel).filter(
+    is_member = (project_exists.owner_id == current_user.id) or bool(db.query(ProjectMemberModel).filter(
         ProjectMemberModel.project_id == project_id,
         ProjectMemberModel.user_id == current_user.id,
-        ).first()
+    ).first())
     
     if not is_member:
         raise HTTPException(status_code=403, detail="Must be a member to access Project members")

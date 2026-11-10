@@ -31,3 +31,7 @@ class Task(Base):
     d_user = relationship("User", back_populates="d_tasks")
     project = relationship("Project", back_populates="tasks")
     comments = relationship("Comment", back_populates="task", cascade="all, delete-orphan")
+
+    @property
+    def assigned_to(self):
+        return self.d_user

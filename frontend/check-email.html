@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Your Email — TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="login.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+    </nav>
+
+    <main class="container narrow">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem 2rem; box-shadow: var(--shadow-md); text-align: center;">
+            <div style="font-size: 2.75rem; margin-bottom: 1rem;">✉️</div>
+            <h1 style="font-size: 1.65rem; margin-bottom: 0.5rem;">Check your inbox</h1>
+
+            <p style="color: var(--text-secondary); line-height: 1.6; margin: 0 0 1.5rem;">
+                We sent a secure verification link to:<br>
+                <strong id="emailShown" style="color: var(--text-primary); font-size: 1.05rem;"></strong>
+            </p>
+
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0 0 1.75rem;">
+                Please click the link in your email to activate your account and access your TaskFlow dashboard.
+            </p>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                <p class="auth-switch" style="margin: 0 0 0.75rem;">
+                    Didn't receive the email? <a href="resend-verification.html">Resend link</a>
+                </p>
+                <p style="margin: 0; font-size: 0.85rem;">
+                    <a href="login.html" style="color: var(--text-muted); text-decoration: none;">&larr; Return to log in</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get("email") || "your email address";
+        document.getElementById("emailShown").textContent = email;
+    </script>
+</body>
+</html>

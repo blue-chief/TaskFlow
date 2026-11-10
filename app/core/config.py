@@ -10,7 +10,11 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     app_name: str = "TaskFlow"
     log_level: str = "INFO"
-    cors_origins: list[str] = ["http://127.0.0.1:5500", "http://localhost:5500"]
+    cors_origins: list[str] = [
+        "http://127.0.0.1:5500", "http://localhost:5500",
+        "http://127.0.0.1:5501", "http://localhost:5501",
+        "http://127.0.0.1:3000", "http://localhost:3000",
+    ]
     frontend_url: str = "http://localhost:5500"
     verify_email_path: str = "/verify-email.html"
     reset_password_path: str = "/reset-password.html"
@@ -30,7 +34,8 @@ class Settings(BaseSettings):
         if self.email_backend == "resend" and not self.resend_api_key:
             raise ValueError("RESEND_API_KEY is required when EMAIL_BACKEND=resend")
         if self.email_backend == "brevo" and not self.brevo_api_key:
-            raise ValueError("RESEND_API_KEY is required when EMAIL_BACKEND=brevo")
+            raise ValueError("BREVO_API_KEY is required when EMAIL_BACKEND=brevo")
         return self
+
 
 settings = Settings()

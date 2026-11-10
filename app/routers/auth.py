@@ -31,12 +31,89 @@ def login(credentials: LoginRequest, db: Annotated[Session, Depends(get_db)]):
 
 @router.post("/verify-email")
 def verify_email(payload: dict, db: Annotated[Session, Depends(get_db)]):
-    user = consume_token(db, payload["token"], EmailTokenPurpose.verify_email)
+    raw_token = payload.get("token", "").strip() if isinstance(payload, dict) else ""
+    user = consume_token(db, raw_token, EmailTokenPurpose.verify_email)
     if not user:
         raise HTTPException(status_code=400, detail="This verification link is invalid or has expired.")
     user.is_verified = True
     db.commit()
     return {"message": "Email verified. You can now log in."}
+
+@router.get("/verify-email")
+def verify_email_get(token: str, db: Annotated[Session, Depends(get_db)]):
+    from fastapi.responses import HTMLResponse
+    from app.core.config import settings
+
+    login_url = f"{settings.frontend_url}/login.html" if settings.frontend_url else "/frontend/login.html"
+    resend_url = f"{settings.frontend_url}/resend-verification.html" if settings.frontend_url else "/frontend/resend-verification.html"
+
+    user = consume_token(db, token.strip(), EmailTokenPurpose.verify_email)
+    if not user:
+        error_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Verification Link Invalid — TaskFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {{ background: #F8FAFC; color: #0F172A; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }}
+        .card {{ background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 2.5rem 2rem; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08); }}
+        .icon {{ font-size: 2.75rem; margin-bottom: 0.75rem; }}
+        h1 {{ color: #BE123C; margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 800; }}
+        p {{ color: #475569; line-height: 1.6; margin: 0 0 1.5rem; font-size: 0.95rem; }}
+        .btn {{ display: inline-block; background: #4F46E5; color: #FFFFFF; font-weight: 600; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.9rem; transition: opacity 0.15s; }}
+        .btn:hover {{ opacity: 0.9; }}
+        .btn-secondary {{ background: #FFFFFF; border: 1px solid #E2E8F0; color: #334155; margin-left: 0.5rem; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">⚠️</div>
+        <h1>Link Invalid or Expired</h1>
+        <p>This verification link is invalid, has expired, or has already been used to verify an account.</p>
+        <div>
+            <a href="{login_url}" class="btn">Go to Log in</a>
+            <a href="{resend_url}" class="btn btn-secondary">Request New Link</a>
+        </div>
+    </div>
+</body>
+</html>"""
+        return HTMLResponse(content=error_html, status_code=400)
+
+    user.is_verified = True
+    db.commit()
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Email Verified — TaskFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="4;url={login_url}">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {{ background: #F8FAFC; color: #0F172A; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }}
+        .card {{ background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 2.5rem 2rem; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08); }}
+        .icon {{ font-size: 2.75rem; margin-bottom: 0.75rem; }}
+        h1 {{ color: #047857; margin: 0 0 0.5rem; font-size: 1.6rem; font-weight: 800; }}
+        p {{ color: #475569; line-height: 1.6; font-size: 0.95rem; }}
+        .btn {{ display: inline-block; background: #4F46E5; color: #FFFFFF; font-weight: 600; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.9rem; margin-top: 1.25rem; transition: opacity 0.15s; }}
+        .btn:hover {{ opacity: 0.9; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Email Verified!</h1>
+        <p>Your email for <strong>{user.username}</strong> has been successfully verified.</p>
+        <p style="font-size: 0.85rem; color: #64748B;">Redirecting to login in 4 seconds...</p>
+        <a href="{login_url}" class="btn">Go to Log in &rarr;</a>
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+
 
 @router.post("/resend-verification", status_code=202)
 def resend_verification(payload: dict, background_tasks: BackgroundTasks, db: Annotated[Session, Depends(get_db)]):

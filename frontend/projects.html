@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects — TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="projects.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+        <div class="nav-links" id="navLinks"></div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <div class="page-header-content">
+                <h1>Projects Overview</h1>
+                <p>All projects you own or collaborate on as a team member.</p>
+            </div>
+            <button id="newProjectBtn" class="btn btn-primary">
+                <span>+</span> New project
+            </button>
+        </div>
+
+        <form id="newProjectForm" class="inline-form hidden">
+            <input type="text" id="projectName" placeholder="Enter a descriptive project name..." required maxlength="200">
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </form>
+
+        <p id="errorBanner" class="error-banner hidden"></p>
+
+        <div id="projectsGrid" class="projects-grid"></div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/projects.js"></script>
+</body>
+</html>

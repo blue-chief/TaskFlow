@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Details — TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="projects.html" class="brand">
+            <span class="brand-icon">TF</span> TaskFlow
+        </a>
+        <div class="nav-links" id="navLinks"></div>
+    </nav>
+
+    <main class="container">
+        <div id="taskNav" style="margin-bottom: 1.5rem;">
+            <a id="backToProject" href="projects.html" class="btn btn-secondary btn-sm">
+                &larr; Back to Project Board
+            </a>
+        </div>
+
+        <article id="taskDetail" class="task-detail"></article>
+        <p id="errorBanner" class="error-banner hidden"></p>
+
+        <section class="comments-section">
+            <h2>Discussion & Comments</h2>
+            <form id="commentForm" class="comment-form">
+                <textarea id="commentContent" placeholder="Write a comment or update for the team..." required maxlength="2000"></textarea>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                </div>
+            </form>
+            <div id="commentsList" class="comments-list"></div>
+        </section>
+
+        <section class="activity-section">
+            <h2>Activity & Audit History</h2>
+            <div id="activityList" class="activity-list"></div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/task.js"></script>
+</body>
+</html>
